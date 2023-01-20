@@ -1,1 +1,3 @@
 Working on DeFi Aave Protocol...
+
+The protocol treats everything as an ERC20 token
