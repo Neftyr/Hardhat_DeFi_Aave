@@ -5,7 +5,8 @@ const { networkConfig } = require("../helper-hardhat-config")
 async function main() {
     await getWeth()
     const { deployer } = getNamedAccounts()
-    await getLendingPool(deployer)
+    const lendingPool = await getLendingPool(deployer)
+    console.log(`LendingPool Address: ${lendingPool.address}`)
 }
 
 async function getLendingPool(account) {
