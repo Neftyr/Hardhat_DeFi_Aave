@@ -6,7 +6,8 @@ async function main() {
     await getWeth()
     const { deployer } = await getNamedAccounts()
     const wethAddress = networkConfig[network.config.chainId].wethToken
-    const daiAddress = networkConfig[network.config.chainId].daiEthPriceFeed
+    const daiAddress = networkConfig[network.config.chainId].daiToken
+    const daiEthPriceFeedAddress = networkConfig[network.config.chainId].daiEthPriceFeed
     console.log(`weth: ${wethAddress}`)
 
     const lendingPool = await getLendingPool(deployer)
@@ -20,9 +21,24 @@ async function main() {
     console.log("Collateral Deposited!")
 
     // Borrowing some DAI
+    console.log("Getting User Borrow Data...")
+    const daiEthPrice = await getAssetPrice(daiEthPriceFeedAddress)
+    const daiTokenName = await getTokenName(daiAddress)
+    console.log(`${daiTokenName} price: ${daiEthPrice.toString() / 10 ** 18}`)
+    const { availableBorrowsETH, totalDebtETH } = await getUserBorrowData(lendingPool, deployer)
+    // Borrwing DAI for 95% of ETH funds
+    const borrowFor = 0.95
+    const amountDaiToBorrow = availableBorrowsETH.toString() * borrowFor * (1 / daiEthPrice.toString())
+    const amountDaiToBorrowWei = ethers.utils.parseEther(amountDaiToBorrow.toString())
+    console.log(`We are borrowing ${amountDaiToBorrow} DAI`)
     console.log("Borrowing DAI...")
-    const daiEthPrice = await getAssetPrice(daiAddress)
+    const borrowTx = await lendingPool.borrow(daiAddress, amountDaiToBorrowWei, 1, 0, deployer)
+    await borrowTx.wait(1)
+    console.log(`Successfully borrowed ${daiTokenName}`)
+    console.log("Your updated User Borrow Data:")
     await getUserBorrowData(lendingPool, deployer)
+
+    // Repaying Debt
 }
 
 async function getLendingPool(account) {
@@ -39,6 +55,12 @@ async function getLendingPool(account) {
     return lendingPool
 }
 
+async function getTokenName(tokenAddress) {
+    const token = await ethers.getContractAt("IERC20", tokenAddress)
+    const tokenName = await token.name()
+    return tokenName
+}
+
 async function approveERC20(amount, spender, erc20Address, account) {
     console.log("Approving ERC20 Token...")
     const erc20 = await ethers.getContractAt("IERC20", erc20Address, account)
@@ -51,7 +73,6 @@ async function getAssetPrice(priceFeedAddress) {
     // As this is PriceFeed we do not need sign it as deployer
     const priceFeedContract = await ethers.getContractAt("AggregatorV3Interface", priceFeedAddress)
     const price = (await priceFeedContract.latestRoundData())[1]
-    console.log(`Price: ${price.toString() / 10 ** 18}`)
     return price
 }
 
@@ -70,6 +91,7 @@ async function getUserBorrowData(lendingPool, account) {
     console.log(`You have ${ethers.utils.formatEther(totalDebtETH)} worth of ETH borrowed.`)
     console.log(`You can borrow ${ethers.utils.formatEther(availableBorrowsETH)} worth of ETH.`)
     console.log(`Liquidation threshold ${currentLiquidationThreshold}%, Max LTV is ${ltv}%, Health Factor ${healthFactor}`)
+
     return { availableBorrowsETH, totalDebtETH }
 }
 
