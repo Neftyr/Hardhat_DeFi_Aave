@@ -22,6 +22,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     log(`Counter: ${await getContract_2.getCounter()}`)
     await getContract_1.add()
     await getContract_2.add()
+    await getContract_1.messagePrinter("My custom message")
 }
 
 module.exports.tags = ["deploy"]

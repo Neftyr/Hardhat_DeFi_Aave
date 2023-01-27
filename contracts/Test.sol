@@ -18,4 +18,8 @@ contract Test {
     function getCounter() public view returns (uint256) {
         return counter;
     }
+
+    function messagePrinter(string memory someMessage) public view {
+        console.log(someMessage);
+    }
 }
