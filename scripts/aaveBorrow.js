@@ -117,3 +117,5 @@ main()
         console.error(error)
         process.exit(1)
     })
+
+module.exports = { getLendingPool, approveERC20, getTokenName, getAssetPrice, borrowAsset, getUserBorrowData }

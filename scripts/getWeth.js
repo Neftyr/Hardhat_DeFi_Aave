@@ -5,6 +5,7 @@ const AMOUNT = ethers.utils.parseEther("0.1")
 
 async function getWeth() {
     const { deploya } = await getNamedAccounts()
+    console.log("Getting Weth...")
     const iWeth = await ethers.getContractAt("IWeth", networkConfig[network.config.chainId].wethToken, deploya)
     const txResponse = await iWeth.deposit({ value: AMOUNT })
     await txResponse.wait(1)
