@@ -48,12 +48,15 @@ async function main() {
 
 async function repayAll(assetAddress, amountToRepay, lendingPool, account) {
     await approveERC20(amountToRepay, lendingPool.address, assetAddress, account)
-    const repayTx = await lendingPool.repay(assetAddress, amountToRepay, 1, account)
+    /** @dev Changing interest rate mode to repay to 2 as 1 is no longer allowed by Aave */
+    const repayTx = await lendingPool.repay(assetAddress, amountToRepay, 2, account)
     await repayTx.wait(1)
 }
 
 async function borrowAsset(assetAddress, lendingPool, amountToBorrow, account) {
-    const borrowTx = await lendingPool.borrow(assetAddress, amountToBorrow, 1, 0, account)
+    /** @dev ILendingPool: function borrow(address asset, uint256 amount, uint256 interestRateMode, uint16 referralCode, address onBehalfOf) external; */
+    /** Stable Interest Rate: 1 Variable Interest Rate: 2 (New Aave allows only variable now) */
+    const borrowTx = await lendingPool.borrow(assetAddress, amountToBorrow, 2, 0, account)
     await borrowTx.wait(1)
 }
 
